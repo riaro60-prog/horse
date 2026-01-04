@@ -47,10 +47,12 @@ const App: React.FC = () => {
     
     setPlayers(prev => prev.map((p, idx) => {
       if (idx === currentPlayerIdx) {
+        // amount가 0이거나 horseId가 0인 경우(건너뛰기)도 히스토리에 남김
+        const newBet: Bet = { horseId, amount, phase: currentPhaseNum };
         return {
           ...p,
           balance: p.balance - amount,
-          bets: [...p.bets, { horseId, amount, phase: currentPhaseNum }]
+          bets: [...p.bets, newBet]
         };
       }
       return p;
@@ -59,7 +61,7 @@ const App: React.FC = () => {
     if (currentPlayerIdx < players.length - 1) {
       setCurrentPlayerIdx(prev => prev + 1);
     } else {
-      // All players have bet
+      // All players have bet or skipped
       setCurrentPlayerIdx(0);
       if (isPhase1) {
         setPhase(GamePhase.INITIAL); // Ready to run R1-R3
@@ -87,7 +89,6 @@ const App: React.FC = () => {
       });
 
       currentPositions = nextPositions;
-      // Fixed type error: Added (pos as number) to resolve unknown comparison.
       foundWinners = Object.entries(currentPositions)
         .filter(([_, pos]) => (pos as number) >= TRACK_LENGTH)
         .map(([id, _]) => parseInt(id));
@@ -116,7 +117,7 @@ const App: React.FC = () => {
           setPlayers(prev => prev.map(p => {
             let totalWin = 0;
             p.bets.forEach(bet => {
-              if (foundWinners.includes(bet.horseId)) {
+              if (bet.horseId !== 0 && foundWinners.includes(bet.horseId)) {
                 totalWin += bet.amount * (bet.phase === 1 ? 3 : 2);
               }
             });
@@ -246,6 +247,12 @@ const App: React.FC = () => {
                           <p className="text-[10px] text-slate-400 italic">아직 베팅 전입니다.</p>
                         ) : (
                           p.bets.map((b, i) => {
+                            if (b.horseId === 0) return (
+                              <div key={i} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg text-xs opacity-50">
+                                <span className="italic">베팅 없음</span>
+                                <span className="font-bold">0토큰</span>
+                              </div>
+                            );
                             const h = HORSES.find(h => h.id === b.horseId);
                             return (
                               <div key={i} className="flex justify-between items-center bg-slate-50 p-2 rounded-lg text-xs">
