@@ -87,8 +87,9 @@ const App: React.FC = () => {
       });
 
       currentPositions = nextPositions;
+      // Fixed type error: Added (pos as number) to resolve unknown comparison.
       foundWinners = Object.entries(currentPositions)
-        .filter(([_, pos]) => pos >= TRACK_LENGTH)
+        .filter(([_, pos]) => (pos as number) >= TRACK_LENGTH)
         .map(([id, _]) => parseInt(id));
 
       setRaceState(prev => ({
